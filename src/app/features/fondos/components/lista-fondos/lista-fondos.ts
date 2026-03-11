@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
+import { Component, OnInit, inject, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FondoService } from '@core/services/fondos-service';
@@ -13,19 +13,17 @@ import { NotificacionService } from '@shared/services/notificacion.service';
   templateUrl: './lista-fondos.html',
   styleUrl: './lista-fondos.css'
 })
-export class ListaFondosComponent implements OnInit, AfterViewChecked {
+export class ListaFondosComponent implements OnInit {
   private readonly fondoService = inject(FondoService);
   private readonly fb = inject(FormBuilder);
   private readonly notificacionService = inject(NotificacionService);
 
-  // Referencias para accesibilidad del modal
+  // Referencias para el modal nativo <dialog>
+  @ViewChild('dialogModal') dialogModal!: ElementRef<HTMLDialogElement>;
   @ViewChild('montoInput') montoInput!: ElementRef<HTMLInputElement>;
   @ViewChild('modalContenido') modalContenido!: ElementRef<HTMLDivElement>;
-  @ViewChild('btnCancelar') btnCancelar!: ElementRef<HTMLButtonElement>;
-  @ViewChild('btnConfirmar') btnConfirmar!: ElementRef<HTMLButtonElement>;
 
   private botonQueAbrioModal: HTMLElement | null = null;
-  private modalRecienAbierto = false;
 
   fondosDisponibles: Fondo[] = [];
   estadoUsuario$ = this.fondoService.estadoUsuario$;
@@ -53,18 +51,9 @@ export class ListaFondosComponent implements OnInit, AfterViewChecked {
     });
   }
 
-  ngAfterViewChecked(): void {
-    // Auto-focus en el input de monto cuando se abre el modal
-    if (this.modalRecienAbierto && this.montoInput) {
-      this.montoInput.nativeElement.focus();
-      this.modalRecienAbierto = false;
-    }
-  }
-
   abrirModalSuscripcion(fondo: Fondo, event?: Event): void {
     // Guardar referencia del botón para devolver el foco al cerrar
     this.botonQueAbrioModal = event?.target as HTMLElement;
-    this.modalRecienAbierto = true;
     this.mensajeError = '';
     this.fondoSeleccionado = fondo;
     // Configuramos validación dinámica según el fondo seleccionado
@@ -76,9 +65,17 @@ export class ListaFondosComponent implements OnInit, AfterViewChecked {
       monto: fondo.montoMinimo,
       notificacion: 'email'
     });
+    // Abrir el dialog nativo con showModal() para accesibilidad completa
+    this.dialogModal.nativeElement.showModal();
+    // Focus en el input de monto
+    setTimeout(() => this.montoInput?.nativeElement.focus(), 0);
   }
 
   cerrarModal(): void {
+    // Cerrar el dialog nativo
+    if (this.dialogModal?.nativeElement.open) {
+      this.dialogModal.nativeElement.close();
+    }
     this.fondoSeleccionado = null;
     this.formularioSuscripcion.reset();
     // Devolver el foco al botón que abrió el modal
@@ -90,33 +87,10 @@ export class ListaFondosComponent implements OnInit, AfterViewChecked {
 
   /** Cierra el modal si se hace click en el backdrop (fuera del contenido) */
   cerrarModalConBackdrop(event: MouseEvent): void {
-    if (event.target === event.currentTarget) {
+    // El elemento <dialog> recibe el click cuando se hace click en el backdrop
+    const dialogElement = this.dialogModal?.nativeElement;
+    if (event.target === dialogElement) {
       this.cerrarModal();
-    }
-  }
-
-  /** Manejo de teclado para accesibilidad: Escape cierra, Tab hace focus trap */
-  manejarTecladoModal(event: KeyboardEvent): void {
-    if (event.key === 'Escape') {
-      this.cerrarModal();
-      return;
-    }
-
-    // Focus trap: mantener el foco dentro del modal
-    if (event.key === 'Tab' && this.modalContenido) {
-      const focusableElements = this.modalContenido.nativeElement.querySelectorAll(
-        'input, select, button:not([disabled])'
-      );
-      const firstElement = focusableElements[0] as HTMLElement;
-      const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
-
-      if (event.shiftKey && document.activeElement === firstElement) {
-        event.preventDefault();
-        lastElement.focus();
-      } else if (!event.shiftKey && document.activeElement === lastElement) {
-        event.preventDefault();
-        firstElement.focus();
-      }
     }
   }
 
