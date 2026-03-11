@@ -1,0 +1,117 @@
+# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+
+# ===================
+# Compiled output
+# ===================
+/dist
+/tmp
+/out-tsc
+/bazel-out
+*.js.map
+
+# ===================
+# Dependencies
+# ===================
+/node_modules
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ===================
+# Logs
+# ===================
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+
+# ===================
+# Environment files
+# ===================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+src/environments/environment.ts
+src/environments/environment.prod.ts
+
+# ===================
+# IDEs and editors
+# ===================
+# JetBrains
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Eclipse
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/*
+
+# Vim
+*.swp
+*.swo
+*~
+
+# ===================
+# Angular / Testing
+# ===================
+/.angular/cache
+.sass-cache/
+/connect.lock
+/coverage
+/libpeerconnection.log
+testem.log
+/typings
+__screenshots__/
+.nyc_output
+karma-results.xml
+junit.xml
+
+# ===================
+# System files
+# ===================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# ===================
+# Misc
+# ===================
+*.tgz
+*.zip
+*.tar.gz
+.cache
+.temp
+.tmp
