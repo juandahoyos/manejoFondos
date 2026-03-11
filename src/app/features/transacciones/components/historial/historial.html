@@ -1,0 +1,46 @@
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+  <div class="p-6 border-b border-gray-100">
+    <h2 class="text-xl font-bold text-gray-800">Historial de Movimientos</h2>
+  </div>
+  
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm text-left text-gray-600">
+      <thead class="text-xs text-gray-500 uppercase bg-gray-50">
+        <tr>
+          <th scope="col" class="px-6 py-4 font-semibold">Fecha</th>
+          <th scope="col" class="px-6 py-4 font-semibold">Fondo</th>
+          <th scope="col" class="px-6 py-4 font-semibold">Tipo</th>
+          <th scope="col" class="px-6 py-4 font-semibold text-right">Monto</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        @for (tx of transacciones$ | async; track tx.id) {
+          <tr class="hover:bg-gray-50/50 transition-colors bg-white">
+            <td class="px-6 py-4 whitespace-nowrap text-gray-500">
+              {{ tx.fecha | date:'dd/MM/yyyy HH:mm' }}
+            </td>
+            <td class="px-6 py-4 font-medium text-gray-900">
+              {{ tx.nombreFondo }}
+            </td>
+            <td class="px-6 py-4">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                    [ngClass]="tx.tipo === 'Suscripción' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+                {{ tx.tipo }}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-right font-medium"
+                [ngClass]="tx.tipo === 'Suscripción' ? 'text-gray-900' : 'text-green-600'">
+              {{ tx.tipo === 'Suscripción' ? '-' : '+' }}{{ tx.monto | currency:'COP':'symbol-narrow':'1.0-0' }}
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" class="px-6 py-8 text-center text-gray-500">
+              No hay transacciones registradas aún.
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
