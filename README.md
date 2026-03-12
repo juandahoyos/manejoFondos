@@ -55,7 +55,7 @@ Aplicación web interactiva para la gestión de Fondos de Pensiones Voluntarias 
 
 1. **Clonar el repositorio**
 ```bash
-git clone https://github.com/tu-usuario/manejo-fondos-app.git
+git clone https://github.com/juandahoyos/manejoFondos.git
 cd manejo-fondos-app
 ```
 
