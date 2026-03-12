@@ -1,5 +1,5 @@
 # manejoFondos
- Diseñar e implementar una aplicación web interactiva y responsiva que permita a un usuario final
+ El objetivo es crear una aplicación web responsiva (que funcione en móviles y computadoras) diseñada para que los inversionistas autogestionen sus productos financieros de manera autónoma y sencilla.
 =======
 # 💼 BTG Pactual - Manejo de Fondos (FPV/FIC)
 
