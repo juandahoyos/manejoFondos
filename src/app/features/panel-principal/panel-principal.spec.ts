@@ -16,9 +16,19 @@ class MockHistorialComponent {}
 class MockToastComponent {}
 
 describe('PanelPrincipalComponent', () => {
-  const estadoUsuarioSubject = new BehaviorSubject<EstadoUsuario>({ saldo: 500000, fondosSuscritos: [] });
+  let estadoUsuarioSubject: BehaviorSubject<EstadoUsuario>;
 
-  const setupComponent = async () => {
+  const crearEstadoMock = (overrides: Partial<EstadoUsuario> = {}): EstadoUsuario => ({
+    saldo: 500000,
+    fondosSuscritos: [],
+    ...overrides
+  });
+
+  const setupComponent = async (estadoInicial?: Partial<EstadoUsuario>) => {
+    if (estadoInicial) {
+      estadoUsuarioSubject.next(crearEstadoMock(estadoInicial));
+    }
+
     const fondoServiceSpy = jasmine.createSpyObj('FondoService', ['obtenerFondosDisponibles'], { 
       estadoUsuario$: estadoUsuarioSubject.asObservable(),
       transacciones$: new BehaviorSubject<Transaccion[]>([]).asObservable()
@@ -32,34 +42,36 @@ describe('PanelPrincipalComponent', () => {
     });
   };
 
-  afterEach(() => estadoUsuarioSubject.next({ saldo: 500000, fondosSuscritos: [] }));
+  beforeEach(() => {
+    estadoUsuarioSubject = new BehaviorSubject<EstadoUsuario>(crearEstadoMock());
+  });
 
   it('debe crear el componente y mostrar el saldo', async () => {
     await setupComponent();
-    
+
     expect(screen.getByText(/saldo disponible/i)).toBeTruthy();
     expect(screen.getByText(/500,000/)).toBeTruthy();
   });
 
   it('debe actualizar el saldo cuando cambia', async () => {
     const { fixture } = await setupComponent();
-    
-    estadoUsuarioSubject.next({ saldo: 400000, fondosSuscritos: ['1'] });
+
+    estadoUsuarioSubject.next(crearEstadoMock({ saldo: 400000, fondosSuscritos: ['1'] }));
     fixture.detectChanges();
-    
+
     expect(screen.getByText(/400,000/)).toBeTruthy();
   });
 
   it('debe mostrar navegación con marca BTG', async () => {
     await setupComponent();
-    
+
     expect(screen.getByRole('navigation', { name: /navegación principal/i })).toBeTruthy();
     expect(screen.getByText(/pactual/i)).toBeTruthy();
   });
 
   it('debe tener regiones de contenido accesibles', async () => {
     await setupComponent();
-    
+
     expect(screen.getByRole('region', { name: /lista de fondos/i })).toBeTruthy();
     expect(screen.getByRole('region', { name: /historial de transacciones/i })).toBeTruthy();
   });

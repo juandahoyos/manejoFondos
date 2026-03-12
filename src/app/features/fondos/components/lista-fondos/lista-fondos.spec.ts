@@ -11,12 +11,24 @@ import { EstadoUsuario } from '@core/models/estadoUsuario.interface';
 describe('ListaFondosComponent', () => {
   let fondoServiceSpy: jasmine.SpyObj<FondoService>;
   let notificacionServiceSpy: jasmine.SpyObj<NotificacionService>;
-  
-  const fondoMock: Fondo = { id: '1', nombre: 'FPV_BTG', montoMinimo: 75000, categoria: 'FPV' };
-  const estadoUsuarioSubject = new BehaviorSubject<EstadoUsuario>({ saldo: 500000, fondosSuscritos: [] });
+  let estadoUsuarioSubject: BehaviorSubject<EstadoUsuario>;
 
-  const setupComponent = async (fondos: Fondo[] = [fondoMock]) => {
-    fondoServiceSpy = jasmine.createSpyObj('FondoService', 
+  const crearFondoMock = (overrides: Partial<Fondo> = {}): Fondo => ({
+    id: '1',
+    nombre: 'FPV_BTG',
+    montoMinimo: 75000,
+    categoria: 'FPV',
+    ...overrides
+  });
+
+  const crearEstadoMock = (overrides: Partial<EstadoUsuario> = {}): EstadoUsuario => ({
+    saldo: 500000,
+    fondosSuscritos: [],
+    ...overrides
+  });
+
+  const setupComponent = async (fondos: Fondo[] = [crearFondoMock()]) => {
+    fondoServiceSpy = jasmine.createSpyObj('FondoService',
       ['obtenerFondosDisponibles', 'suscribirseAFondo', 'cancelarSuscripcion'],
       { estadoUsuario$: estadoUsuarioSubject.asObservable() }
     );
@@ -32,18 +44,20 @@ describe('ListaFondosComponent', () => {
     });
   };
 
-  afterEach(() => estadoUsuarioSubject.next({ saldo: 500000, fondosSuscritos: [] }));
+  beforeEach(() => {
+    estadoUsuarioSubject = new BehaviorSubject<EstadoUsuario>(crearEstadoMock());
+  });
 
   it('debe mostrar fondos disponibles con botón de vinculación', async () => {
     await setupComponent();
-    
+
     expect(screen.getByRole('heading', { name: /fondos disponibles/i })).toBeTruthy();
     expect(screen.getByText('FPV_BTG')).toBeTruthy();
     expect(screen.getByRole('button', { name: /vincularse al fondo fpv_btg/i })).toBeTruthy();
   });
 
   it('debe mostrar notificación de error cuando falla la carga', async () => {
-    fondoServiceSpy = jasmine.createSpyObj('FondoService', 
+    fondoServiceSpy = jasmine.createSpyObj('FondoService',
       ['obtenerFondosDisponibles', 'suscribirseAFondo', 'cancelarSuscripcion'],
       { estadoUsuario$: estadoUsuarioSubject.asObservable() }
     );
@@ -63,7 +77,7 @@ describe('ListaFondosComponent', () => {
 
   it('debe abrir modal de suscripción al hacer clic en Vincularse', async () => {
     await setupComponent();
-    
+
     const botonVincularse = screen.getByRole('button', { name: /vincularse al fondo fpv_btg/i });
     fireEvent.click(botonVincularse);
 
@@ -76,15 +90,14 @@ describe('ListaFondosComponent', () => {
   it('debe procesar suscripción exitosa', async () => {
     await setupComponent();
     fondoServiceSpy.suscribirseAFondo.and.returnValue(of(true));
-    
+
     fireEvent.click(screen.getByRole('button', { name: /vincularse al fondo fpv_btg/i }));
-    
+
     await waitFor(() => screen.getByRole('dialog'));
-    
+
     const inputMonto = screen.getByLabelText(/monto a invertir/i);
     fireEvent.input(inputMonto, { target: { value: '100000' } });
-    
-    // El botón de submit tiene texto "Confirmar"
+
     const botones = screen.getAllByRole('button');
     const botonConfirmar = botones.find(btn => btn.textContent?.includes('Confirmar'));
     fireEvent.click(botonConfirmar!);
@@ -96,14 +109,14 @@ describe('ListaFondosComponent', () => {
   });
 
   it('debe mostrar botón de cancelar cuando el usuario está suscrito', async () => {
-    estadoUsuarioSubject.next({ saldo: 400000, fondosSuscritos: ['1'] });
+    estadoUsuarioSubject.next(crearEstadoMock({ saldo: 400000, fondosSuscritos: ['1'] }));
     await setupComponent();
 
     expect(screen.getByRole('button', { name: /cancelar vinculación al fondo fpv_btg/i })).toBeTruthy();
   });
 
   it('debe cancelar suscripción correctamente', async () => {
-    estadoUsuarioSubject.next({ saldo: 400000, fondosSuscritos: ['1'] });
+    estadoUsuarioSubject.next(crearEstadoMock({ saldo: 400000, fondosSuscritos: ['1'] }));
     await setupComponent();
     fondoServiceSpy.cancelarSuscripcion.and.returnValue(of(true));
 
@@ -118,13 +131,13 @@ describe('ListaFondosComponent', () => {
   it('debe mostrar error cuando falla la suscripción', async () => {
     await setupComponent();
     fondoServiceSpy.suscribirseAFondo.and.returnValue(throwError(() => new Error('Saldo insuficiente')));
-    
+
     fireEvent.click(screen.getByRole('button', { name: /vincularse al fondo fpv_btg/i }));
     await waitFor(() => screen.getByRole('dialog'));
-    
+
     const inputMonto = screen.getByLabelText(/monto a invertir/i);
     fireEvent.input(inputMonto, { target: { value: '100000' } });
-    
+
     const botones = screen.getAllByRole('button');
     const botonConfirmar = botones.find(btn => btn.textContent?.includes('Confirmar'));
     fireEvent.click(botonConfirmar!);
@@ -135,7 +148,7 @@ describe('ListaFondosComponent', () => {
   });
 
   it('debe mostrar error cuando falla la cancelación', async () => {
-    estadoUsuarioSubject.next({ saldo: 400000, fondosSuscritos: ['1'] });
+    estadoUsuarioSubject.next(crearEstadoMock({ saldo: 400000, fondosSuscritos: ['1'] }));
     await setupComponent();
     fondoServiceSpy.cancelarSuscripcion.and.returnValue(throwError(() => new Error('Error de red')));
 
@@ -148,12 +161,12 @@ describe('ListaFondosComponent', () => {
 
   it('debe cerrar modal con tecla Escape', async () => {
     await setupComponent();
-    
+
     fireEvent.click(screen.getByRole('button', { name: /vincularse/i }));
     await waitFor(() => screen.getByRole('dialog'));
 
     fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
-    
+
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).toBeNull();
     });

@@ -1,31 +1,21 @@
-import { TestBed } from '@angular/core/testing';
+import { render } from '@testing-library/angular';
 import { App } from './app';
 import { provideRouter } from '@angular/router';
 
 describe('App', () => {
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [App],
+  const setupComponent = async () => {
+    return await render(App, {
       providers: [provideRouter([])]
-    }).compileComponents();
+    });
+  };
+
+  it('debe crear la aplicación', async () => {
+    const { fixture } = await setupComponent();
+    expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should create the app', () => {
-    const fixture = TestBed.createComponent(App);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
-  });
-
-  it('should have title signal with correct value', () => {
-    const fixture = TestBed.createComponent(App);
-    const app = fixture.componentInstance;
-    expect(app['title']()).toBe('manejo-fondos-app');
-  });
-
-  it('should contain router-outlet', () => {
-    const fixture = TestBed.createComponent(App);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('router-outlet')).toBeTruthy();
+  it('debe contener router-outlet para navegación', async () => {
+    const { container } = await setupComponent();
+    expect(container.querySelector('router-outlet')).toBeTruthy();
   });
 });

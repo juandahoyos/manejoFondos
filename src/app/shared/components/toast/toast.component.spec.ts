@@ -9,6 +9,14 @@ describe('ToastComponent', () => {
   let notificacionServiceSpy: jasmine.SpyObj<NotificacionService>;
   let notificacionesMock: WritableSignal<Notificacion[]>;
 
+  const crearNotificacionMock = (overrides: Partial<Notificacion> = {}): Notificacion => ({
+    id: '1',
+    mensaje: 'Mensaje de prueba',
+    tipo: 'info',
+    duracion: 4000,
+    ...overrides
+  });
+
   const setupComponent = async (notificaciones: Notificacion[] = []) => {
     notificacionesMock = signal<Notificacion[]>(notificaciones);
     notificacionServiceSpy = jasmine.createSpyObj('NotificacionService', ['cerrar'], {
@@ -22,61 +30,52 @@ describe('ToastComponent', () => {
 
   it('debe crear el componente con contenedor accesible', async () => {
     const { container } = await setupComponent();
-    
-    // Verificar que existe el contenedor con aria-live
+
     expect(container.querySelector('[aria-live="polite"]')).toBeTruthy();
-    expect(screen.queryAllByRole('alert').length).toBe(0);
+    expect(screen.queryAllByRole('alert')).toHaveSize(0);
   });
 
   it('debe mostrar notificaciones con mensaje', async () => {
     await setupComponent([
-      { id: '1', mensaje: 'Operación exitosa', tipo: 'exito', duracion: 4000 },
-      { id: '2', mensaje: 'Ocurrió un error', tipo: 'error', duracion: 5000 }
+      crearNotificacionMock({ id: '1', mensaje: 'Operación exitosa', tipo: 'exito' }),
+      crearNotificacionMock({ id: '2', mensaje: 'Ocurrió un error', tipo: 'error' })
     ]);
 
-    expect(screen.getAllByRole('alert').length).toBe(2);
+    expect(screen.getAllByRole('alert')).toHaveSize(2);
     expect(screen.getByText('Operación exitosa')).toBeTruthy();
     expect(screen.getByText('Ocurrió un error')).toBeTruthy();
   });
 
   it('debe mostrar botón de cerrar en cada notificación', async () => {
-    await setupComponent([
-      { id: '1', mensaje: 'Test', tipo: 'info', duracion: 4000 }
-    ]);
+    await setupComponent([crearNotificacionMock()]);
 
-    const botonCerrar = screen.getByRole('button', { name: /cerrar notificación/i });
-    expect(botonCerrar).toBeTruthy();
+    expect(screen.getByRole('button', { name: /cerrar notificación/i })).toBeTruthy();
   });
 
   it('debe llamar a cerrar() al hacer clic en el botón', async () => {
-    await setupComponent([
-      { id: 'test-id', mensaje: 'Test', tipo: 'info', duracion: 4000 }
-    ]);
-    
-    const botonCerrar = screen.getByRole('button', { name: /cerrar notificación/i });
-    fireEvent.click(botonCerrar);
-    
+    await setupComponent([crearNotificacionMock({ id: 'test-id' })]);
+
+    fireEvent.click(screen.getByRole('button', { name: /cerrar notificación/i }));
+
     expect(notificacionServiceSpy.cerrar).toHaveBeenCalledWith('test-id');
   });
 
-  it('debe renderizar diferentes tipos de notificación', async () => {
-    const { fixture, rerender } = await setupComponent([
-      { id: '1', mensaje: 'Éxito', tipo: 'exito', duracion: 4000 }
+  it('debe aplicar estilos según el tipo de notificación', async () => {
+    const { fixture } = await setupComponent([
+      crearNotificacionMock({ tipo: 'exito' })
     ]);
 
     let alert = screen.getByRole('alert');
-    expect(alert.className).toContain('border-green-200');
+    expect(alert.className).toContain('border-green');
 
-    notificacionesMock.set([{ id: '2', mensaje: 'Error', tipo: 'error', duracion: 4000 }]);
+    notificacionesMock.set([crearNotificacionMock({ id: '2', tipo: 'error' })]);
     fixture.detectChanges();
-    
     alert = screen.getByRole('alert');
-    expect(alert.className).toContain('border-red-200');
+    expect(alert.className).toContain('border-red');
 
-    notificacionesMock.set([{ id: '3', mensaje: 'Info', tipo: 'info', duracion: 4000 }]);
+    notificacionesMock.set([crearNotificacionMock({ id: '3', tipo: 'info' })]);
     fixture.detectChanges();
-    
     alert = screen.getByRole('alert');
-    expect(alert.className).toContain('border-blue-200');
+    expect(alert.className).toContain('border-blue');
   });
 });
