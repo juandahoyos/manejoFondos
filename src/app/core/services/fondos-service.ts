@@ -57,9 +57,9 @@ export class FondoService {
           fondosSuscritos: [...estado.fondosSuscritos, fondo.id]
         });
 
-        // Registrar transacción [cite: 9]
+        // Registrar transacción
         this.agregarTransaccion({
-          id: Math.random().toString(36).substring(2, 9),
+          id: crypto.randomUUID(),
           fondoId: fondo.id,
           nombreFondo: fondo.nombre,
           tipo: 'Suscripción',
@@ -75,28 +75,32 @@ export class FondoService {
 
   cancelarSuscripcion(fondoId: string): Observable<boolean> {
     return timer(400).pipe(
-      map(() => {
+      switchMap(() => {
         const estado = this.estadoUsuarioSubject.value;
         const transaccionOriginal = this.transaccionesSubject.value.find(
           t => t.fondoId === fondoId && t.tipo === 'Suscripción'
         );
-        if (transaccionOriginal) {
-          // Devolver dinero y remover fondo
-          this.estadoUsuarioSubject.next({
-            saldo: estado.saldo + transaccionOriginal.monto,
-            fondosSuscritos: estado.fondosSuscritos.filter(id => id !== fondoId)
-          });
 
-          this.agregarTransaccion({
-            id: Math.random().toString(36).substring(2, 9),
-            fondoId: fondoId,
-            nombreFondo: transaccionOriginal.nombreFondo,
-            tipo: 'Cancelación',
-            monto: transaccionOriginal.monto,
-            fecha: new Date()
-          });
+        if (!transaccionOriginal) {
+          return throwError(() => new Error('No estás suscrito a este fondo.'));
         }
-        return true;
+
+        // Devolver dinero y remover fondo
+        this.estadoUsuarioSubject.next({
+          saldo: estado.saldo + transaccionOriginal.monto,
+          fondosSuscritos: estado.fondosSuscritos.filter(id => id !== fondoId)
+        });
+
+        this.agregarTransaccion({
+          id: crypto.randomUUID(),
+          fondoId: fondoId,
+          nombreFondo: transaccionOriginal.nombreFondo,
+          tipo: 'Cancelación',
+          monto: transaccionOriginal.monto,
+          fecha: new Date()
+        });
+
+        return [true];
       })
     );
   }
