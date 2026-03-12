@@ -1,5 +1,3 @@
-// src/app/nucleo/servicios/fondo.service.ts
-
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, throwError, timer } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';

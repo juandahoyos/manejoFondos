@@ -5,7 +5,6 @@ import { FondoService } from '@core/services/fondos-service';
 import { Fondo } from '@core/models/fondo.interface';
 import { NotificacionService } from '@shared/services/notificacion.service';
 
-
 @Component({
   selector: 'app-lista-fondos',
   standalone: true,
@@ -45,8 +44,8 @@ export class ListaFondosComponent implements OnInit {
         this.cargando = false;
       },
       error: () => {
-        this.mensajeError = 'Error al cargar los fondos disponibles.';
         this.cargando = false;
+        this.notificacionService.error('Error al cargar los fondos disponibles. Intenta nuevamente.');
       }
     });
   }
@@ -110,8 +109,8 @@ export class ListaFondosComponent implements OnInit {
         },
         error: (err) => {
           this.procesando = false;
-          this.mensajeError = err.message;
           this.cerrarModal();
+          this.notificacionService.error(err.message || 'No se pudo completar la suscripción');
         }
       });
     }
@@ -122,6 +121,9 @@ export class ListaFondosComponent implements OnInit {
     this.fondoService.cancelarSuscripcion(fondoId).subscribe({
       next: () => {
         this.notificacionService.exito(`Has cancelado tu vinculación al fondo ${fondo?.nombre}`);
+      },
+      error: (err) => {
+        this.notificacionService.error(err.message || 'No se pudo cancelar la suscripción');
       }
     });
   }

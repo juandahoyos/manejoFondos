@@ -42,11 +42,12 @@ describe('ListaFondosComponent', () => {
     expect(screen.getByRole('button', { name: /vincularse al fondo fpv_btg/i })).toBeTruthy();
   });
 
-  it('debe mostrar mensaje de error cuando falla la carga', async () => {
+  it('debe mostrar notificación de error cuando falla la carga', async () => {
     fondoServiceSpy = jasmine.createSpyObj('FondoService', 
       ['obtenerFondosDisponibles', 'suscribirseAFondo', 'cancelarSuscripcion'],
       { estadoUsuario$: estadoUsuarioSubject.asObservable() }
     );
+    notificacionServiceSpy = jasmine.createSpyObj('NotificacionService', ['exito', 'error']);
     fondoServiceSpy.obtenerFondosDisponibles.and.returnValue(throwError(() => new Error('Error')));
 
     await render(ListaFondosComponent, {
@@ -57,8 +58,7 @@ describe('ListaFondosComponent', () => {
       ]
     });
 
-    expect(screen.getByRole('alert')).toBeTruthy();
-    expect(screen.getByText(/error al cargar los fondos/i)).toBeTruthy();
+    expect(notificacionServiceSpy.error).toHaveBeenCalledWith('Error al cargar los fondos disponibles. Intenta nuevamente.');
   });
 
   it('debe abrir modal de suscripción al hacer clic en Vincularse', async () => {
@@ -112,6 +112,37 @@ describe('ListaFondosComponent', () => {
     await waitFor(() => {
       expect(fondoServiceSpy.cancelarSuscripcion).toHaveBeenCalledWith('1');
       expect(notificacionServiceSpy.exito).toHaveBeenCalled();
+    });
+  });
+
+  it('debe mostrar error cuando falla la suscripción', async () => {
+    await setupComponent();
+    fondoServiceSpy.suscribirseAFondo.and.returnValue(throwError(() => new Error('Saldo insuficiente')));
+    
+    fireEvent.click(screen.getByRole('button', { name: /vincularse al fondo fpv_btg/i }));
+    await waitFor(() => screen.getByRole('dialog'));
+    
+    const inputMonto = screen.getByLabelText(/monto a invertir/i);
+    fireEvent.input(inputMonto, { target: { value: '100000' } });
+    
+    const botones = screen.getAllByRole('button');
+    const botonConfirmar = botones.find(btn => btn.textContent?.includes('Confirmar'));
+    fireEvent.click(botonConfirmar!);
+
+    await waitFor(() => {
+      expect(notificacionServiceSpy.error).toHaveBeenCalledWith('Saldo insuficiente');
+    });
+  });
+
+  it('debe mostrar error cuando falla la cancelación', async () => {
+    estadoUsuarioSubject.next({ saldo: 400000, fondosSuscritos: ['1'] });
+    await setupComponent();
+    fondoServiceSpy.cancelarSuscripcion.and.returnValue(throwError(() => new Error('Error de red')));
+
+    fireEvent.click(screen.getByRole('button', { name: /cancelar vinculación/i }));
+
+    await waitFor(() => {
+      expect(notificacionServiceSpy.error).toHaveBeenCalledWith('Error de red');
     });
   });
 
