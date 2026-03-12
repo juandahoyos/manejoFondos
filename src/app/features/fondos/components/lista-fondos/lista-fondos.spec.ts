@@ -122,6 +122,13 @@ describe('ListaFondosComponent', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /cancelar vinculación/i }));
 
+    // Esperar el dialog de confirmación
+    await waitFor(() => screen.getByRole('dialog'));
+
+    // Confirmar la cancelación
+    const botonConfirmar = screen.getByRole('button', { name: /sí, cancelar/i });
+    fireEvent.click(botonConfirmar);
+
     await waitFor(() => {
       expect(fondoServiceSpy.cancelarSuscripcion).toHaveBeenCalledWith('1');
       expect(notificacionServiceSpy.exito).toHaveBeenCalled();
@@ -153,6 +160,13 @@ describe('ListaFondosComponent', () => {
     fondoServiceSpy.cancelarSuscripcion.and.returnValue(throwError(() => new Error('Error de red')));
 
     fireEvent.click(screen.getByRole('button', { name: /cancelar vinculación/i }));
+
+    // Esperar el dialog de confirmación
+    await waitFor(() => screen.getByRole('dialog'));
+
+    // Confirmar la cancelación
+    const botonConfirmar = screen.getByRole('button', { name: /sí, cancelar/i });
+    fireEvent.click(botonConfirmar);
 
     await waitFor(() => {
       expect(notificacionServiceSpy.error).toHaveBeenCalledWith('Error de red');

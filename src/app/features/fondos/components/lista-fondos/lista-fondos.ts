@@ -19,6 +19,7 @@ export class ListaFondosComponent implements OnInit {
 
   // Referencias para el modal nativo <dialog>
   @ViewChild('dialogModal') dialogModal!: ElementRef<HTMLDialogElement>;
+  @ViewChild('dialogConfirmarCancelacion') dialogConfirmarCancelacion!: ElementRef<HTMLDialogElement>;
   @ViewChild('montoInput') montoInput!: ElementRef<HTMLInputElement>;
   @ViewChild('modalContenido') modalContenido!: ElementRef<HTMLDivElement>;
 
@@ -30,6 +31,8 @@ export class ListaFondosComponent implements OnInit {
   cargando = true;
   procesando = false;
   fondoSeleccionado: Fondo | null = null;
+  saldoActual = 0;
+  fondoPendienteCancelar: { id: string; nombre: string } | null = null;
 
   formularioSuscripcion: FormGroup = this.fb.group({
     monto: ['', [Validators.required]],
@@ -53,6 +56,7 @@ export class ListaFondosComponent implements OnInit {
     // Guardar referencia del botón para devolver el foco al cerrar
     this.botonQueAbrioModal = event?.target as HTMLElement;
     this.fondoSeleccionado = fondo;
+    this.saldoActual = saldo;
     // Configuramos validación dinámica según el fondo seleccionado
     this.formularioSuscripcion.get('monto')?.setValidators([
       Validators.required,
@@ -114,15 +118,40 @@ export class ListaFondosComponent implements OnInit {
     }
   }
 
-  cancelarSuscripcion(fondoId: string): void {
+  abrirConfirmacionCancelacion(fondoId: string, event?: Event): void {
+    this.botonQueAbrioModal = event?.target as HTMLElement;
     const fondo = this.fondosDisponibles.find(f => f.id === fondoId);
-    this.fondoService.cancelarSuscripcion(fondoId).subscribe({
+    this.fondoPendienteCancelar = fondo ? { id: fondo.id, nombre: fondo.nombre } : null;
+    this.dialogConfirmarCancelacion.nativeElement.showModal();
+  }
+
+  cerrarConfirmacionCancelacion(): void {
+    if (this.dialogConfirmarCancelacion?.nativeElement.open) {
+      this.dialogConfirmarCancelacion.nativeElement.close();
+    }
+    this.fondoPendienteCancelar = null;
+    if (this.botonQueAbrioModal) {
+      setTimeout(() => this.botonQueAbrioModal?.focus(), 0);
+      this.botonQueAbrioModal = null;
+    }
+  }
+
+  confirmarCancelacion(): void {
+    if (!this.fondoPendienteCancelar) return;
+    const { id, nombre } = this.fondoPendienteCancelar;
+    this.cerrarConfirmacionCancelacion();
+    this.fondoService.cancelarSuscripcion(id).subscribe({
       next: () => {
-        this.notificacionService.exito(`Has cancelado tu vinculación al fondo ${fondo?.nombre}`);
+        this.notificacionService.exito(`Has cancelado tu vinculación al fondo ${nombre}`);
       },
       error: (err) => {
         this.notificacionService.error(err.message || 'No se pudo cancelar la suscripción');
       }
     });
+  }
+
+  calcularSaldoResultante(): number {
+    const monto = this.formularioSuscripcion.get('monto')?.value || 0;
+    return this.saldoActual - monto;
   }
 }

@@ -15,11 +15,21 @@
         </div>
         
         @if (estadoUsuario$ | async; as estado) {
-          <div class="flex flex-col items-end">
+          <div class="flex flex-col items-end min-w-35 sm:min-w-45">
             <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo Disponible</span>
-            <span class="text-xl sm:text-2xl font-bold text-green-600" aria-live="polite">
+            <span class="text-xl sm:text-2xl font-bold" 
+                  [ngClass]="estado.saldo > 100000 ? 'text-green-600' : (estado.saldo > 50000 ? 'text-yellow-600' : 'text-red-600')"
+                  aria-live="polite">
               {{ estado.saldo | currency:'COP':'symbol-narrow':'1.0-0' }}
             </span>
+            <!-- Barra visual de saldo (decorativa, el valor está arriba) -->
+            <div class="w-full h-1.5 bg-gray-200 rounded-full mt-1 overflow-hidden" 
+                 aria-hidden="true">
+              <div class="h-full rounded-full transition-all duration-500"
+                   [ngClass]="estado.saldo > 100000 ? 'bg-green-500' : (estado.saldo > 50000 ? 'bg-yellow-500' : 'bg-red-500')"
+                   [style.width.%]="(estado.saldo / 500000) * 100">
+              </div>
+            </div>
           </div>
         }
       </div>

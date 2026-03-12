@@ -42,7 +42,7 @@ describe('HistorialComponent', () => {
 
   it('debe mostrar mensaje cuando no hay transacciones', async () => {
     await setupComponent();
-    expect(screen.getByText(/no hay transacciones registradas/i)).toBeTruthy();
+    expect(screen.getByText(/aún no tienes movimientos/i)).toBeTruthy();
   });
 
   it('debe mostrar tabla con transacciones', async () => {
