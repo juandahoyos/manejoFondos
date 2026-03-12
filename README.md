@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # manejoFondos
  Diseñar e implementar una aplicación web interactiva y responsiva que permita a un usuario final
 =======
@@ -155,4 +154,3 @@ Desarrollado como prueba técnica para BTG Pactual.
 ## 📄 Licencia
 
 Este proyecto es de uso educativo y evaluativo.
->>>>>>> 9b96cc8f3b061ff9a0e633729b8e4f4daaebd233
