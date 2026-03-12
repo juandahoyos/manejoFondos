@@ -29,7 +29,6 @@ export class ListaFondosComponent implements OnInit {
 
   cargando = true;
   procesando = false;
-  mensajeError = '';
   fondoSeleccionado: Fondo | null = null;
 
   formularioSuscripcion: FormGroup = this.fb.group({
@@ -50,15 +49,15 @@ export class ListaFondosComponent implements OnInit {
     });
   }
 
-  abrirModalSuscripcion(fondo: Fondo, event?: Event): void {
+  abrirModalSuscripcion(fondo: Fondo, saldo: number, event?: Event): void {
     // Guardar referencia del botón para devolver el foco al cerrar
     this.botonQueAbrioModal = event?.target as HTMLElement;
-    this.mensajeError = '';
     this.fondoSeleccionado = fondo;
     // Configuramos validación dinámica según el fondo seleccionado
     this.formularioSuscripcion.get('monto')?.setValidators([
       Validators.required,
-      Validators.min(fondo.montoMinimo)
+      Validators.min(fondo.montoMinimo),
+      Validators.max(saldo)
     ]);
     this.formularioSuscripcion.patchValue({
       monto: fondo.montoMinimo,
@@ -96,7 +95,6 @@ export class ListaFondosComponent implements OnInit {
   procesarSuscripcion(): void {
     if (this.formularioSuscripcion.valid && this.fondoSeleccionado) {
       this.procesando = true;
-      this.mensajeError = '';
 
       const { monto, notificacion } = this.formularioSuscripcion.value;
 

@@ -8,21 +8,6 @@
     </div>
   }
 
-  @if (mensajeError) {
-    <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-md" role="alert">
-      <div class="flex">
-        <div class="shrink-0">
-          <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.78 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.22 1.22a.75.75 0 101.06 1.06L10 11.06l1.22 1.22a.75.75 0 101.06-1.06L11.06 10l1.22-1.22a.75.75 0 00-1.06-1.06L10 8.94 8.78 7.22z" clip-rule="evenodd" />
-          </svg>
-        </div>
-        <div class="ml-3">
-          <p class="text-sm text-red-700">{{ mensajeError }}</p>
-        </div>
-      </div>
-    </div>
-  }
-
   <div class="grid grid-cols-1 gap-4">
     @for (fondo of fondosDisponibles; track fondo.id) {
       <div class="border border-gray-100 rounded-lg p-5 hover:shadow-md transition-shadow bg-gray-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -39,7 +24,7 @@
         @if (estadoUsuario$ | async; as estado) {
           <div class="w-full sm:w-auto">
             @if (!estado.fondosSuscritos.includes(fondo.id)) {
-              <button (click)="abrirModalSuscripcion(fondo, $event)" 
+              <button (click)="abrirModalSuscripcion(fondo, estado.saldo, $event)" 
                       class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                       [attr.aria-label]="'Vincularse al fondo ' + fondo.nombre">
                 Vincularse
@@ -95,6 +80,11 @@
             @if (formularioSuscripcion.get('monto')?.errors?.['min'] && formularioSuscripcion.get('monto')?.touched) {
               <p id="monto-error" class="mt-2 text-sm text-red-600" role="alert">
                 El monto debe ser al menos {{ fondoSeleccionado.montoMinimo | currency:'COP':'symbol-narrow':'1.0-0' }}
+              </p>
+            }
+            @if (formularioSuscripcion.get('monto')?.errors?.['max'] && formularioSuscripcion.get('monto')?.touched) {
+              <p class="mt-2 text-sm text-red-600" role="alert">
+                El monto supera tu saldo disponible
               </p>
             }
           </div>
